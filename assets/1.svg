@@ -1,0 +1,12 @@
+<svg width="240" height="60" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 小尺寸图标部分 -->
+  <circle cx="25" cy="30" r="22" fill="#1E1E2E"/>
+  <path d="M18 30C18 25 22 22 25 22C28 22 32 25 32 30V40C32 42 28 45 25 45C22 45 18 42 18 40V30Z" fill="#4FD1C5"/>
+  <path d="M18 25L14 18L22 22M32 25L36 18L28 22" stroke="#4FD1C5" stroke-width="2"/>
+  
+  <!-- 文字部分 -->
+  <text x="60" y="42" font-family="Arial, sans-serif" font-weight="800" font-size="28" fill="#1E1E2E">Sense</text>
+  <text x="145" y="42" font-family="Arial, sans-serif" font-weight="800" font-size="28" fill="#4FD1C5">Cat</text>
+  <!-- 装饰线条 -->
+  <rect x="60" y="48" width="160" height="2" fill="#4FD1C5" opacity="0.3"/>
+</svg>

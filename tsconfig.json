@@ -1,0 +1,12 @@
+{
+  "extends": "plasmo/templates/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "include": [
+    ".plasmo/index.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.json"
+  ]
+}

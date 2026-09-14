@@ -1,0 +1,44 @@
+{
+  "name": "web-saver",
+  "displayName": "Web Saver",
+  "version": "0.1.0",
+  "description": "Web Saver - 把网页中碎片知识用更好的文件格式保存下来。支持跨网页智能拼接与知识采集。",
+  "author": "web-saver",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "docx": "^8.5.0",
+    "lucide-react": "^0.300.0",
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "turndown": "^7.1.2",
+    "turndown-plugin-gfm": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "@types/turndown": "^5.0.6",
+    "svgo": "^3.3.2",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "permissions": [
+      "activeTab",
+      "storage",
+      "downloads",
+      "scripting",
+      "contextMenus",
+      "sidePanel"
+    ],
+    "host_permissions": [
+      "<all_urls>"
+    ]
+  }
+}
