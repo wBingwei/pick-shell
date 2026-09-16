@@ -65,7 +65,7 @@ function GripIcon() {
   )
 }
 
-// 「灵动选区」的快捷键说明（与页面底部悬浮提示保持一致）
+// 「手动选区」的快捷键说明（与页面底部悬浮提示保持一致）
 const PICK_KEYMAP: Array<{ keys: string[]; text: string }> = [
   { keys: ["↑", "←"], text: "选父级" },
   { keys: ["↓", "→"], text: "选子级" },
@@ -90,6 +90,8 @@ function IndexSidePanel() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [overIndex, setOverIndex] = useState<number | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  // 导出标题：留空则用自动标题（单个片段取原文标题，多个片段取合成标题）
+  const [docTitle, setDocTitle] = useState("")
 
   // 读取完成前不允许写回，否则首帧的空数组会把已存的暂存覆盖掉
   const hydratedRef = useRef(false)
@@ -97,6 +99,7 @@ function IndexSidePanel() {
   const {
     loading,
     status,
+    statusType,
     setStatus,
     handleExport
   } = useContentAction(
@@ -105,6 +108,13 @@ function IndexSidePanel() {
     virtualListDetected,
     modernCss
   )
+
+  // 导出标题：留空则自动生成——只有一个片段用原文标题，多个片段用合成标题
+  const autoTitle =
+    basket.length > 1
+      ? `拾贝 合成文档 - ${new Date().toLocaleDateString()}`
+      : basket[0]?.title || "拾贝导出"
+  const finalTitle = docTitle.trim() || autoTitle
 
   useEffect(() => {
     // 清理旧版本遗留的数据
@@ -184,7 +194,7 @@ function IndexSidePanel() {
         setBasket(prev => [...prev, newClip])
         setMode("auto")
       }
-      // 页面里按 Esc 退出选区后，侧边栏的状态要跟着回到「智能全页」
+      // 页面里按 Esc 退出选区后，侧边栏的状态要跟着回到「整页提取」
       if (message.type === "PICK_EXIT") {
         setMode("auto")
       }
@@ -223,7 +233,7 @@ function IndexSidePanel() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
       if (!tab?.id) return
-      setStatus("正在捕获...")
+      setStatus("正在提取...", "info")
       const article = await sendTabMessage(tab.id, tab.url, { 
         type: "EXTRACT_CONTENT",
         format: "markdown",
@@ -241,10 +251,10 @@ function IndexSidePanel() {
           favicon: `https://www.google.com/s2/favicons?domain=${new URL(tab.url!).hostname}&sz=32`
         }
         setBasket(prev => [...prev, newClip])
-        setStatus("成功装进口袋！")
+        setStatus("已加入暂存", "success")
       }
     } catch (e) {
-      setStatus("加入暂存失败")
+      setStatus("加入暂存失败", "error")
     }
   }
 
@@ -290,7 +300,7 @@ function IndexSidePanel() {
 
   const handleMergeCopy = async () => {
     if (basket.length === 0) return
-    setStatus("正在智能合成...")
+    setStatus("正在智能合成...", "info")
     try {
       // 优先在本地进行 Markdown 合成，避免依赖不稳定的后端服务
       const mergedHtml = basket.map((clip) => `
@@ -299,20 +309,19 @@ function IndexSidePanel() {
         </div>
       `).join("\n")
 
-      const synthesisTitle = `拾贝 合成文档 - ${new Date().toLocaleDateString()}`
       const sources = basket.map((clip) => clip.url).filter(Boolean)
-      const text = await convertToMarkdown(mergedHtml, synthesisTitle, sources)
+      const text = await convertToMarkdown(mergedHtml, finalTitle, sources)
       
       await navigator.clipboard.writeText(text)
-      setStatus("合并内容已成功拷贝！")
+      setStatus("已拷贝到剪贴板", "success")
     } catch (err) {
-      setStatus(`合成拷贝失败: ${err.message}`)
+      setStatus(`合成拷贝失败: ${err.message}`, "error")
     }
   }
 
   const handleMergeExport = async () => {
     if (basket.length === 0) return
-    setStatus("正在敲贝壳 (智能合成)...")
+    setStatus("正在合成...", "info")
     
     try {
       const mergedHtml = basket.map((clip, index) => `
@@ -322,23 +331,21 @@ function IndexSidePanel() {
         </div>
       `).join("\n")
 
-      const synthesisTitle = `拾贝 合成文档 - ${new Date().toLocaleDateString()}`
-
       // 调用导出逻辑
       await handleExport({
         content: mergedHtml,
-        title: synthesisTitle,
+        title: finalTitle,
         sources: basket.map((clip) => clip.url).filter(Boolean)
       })
 
-      setStatus("项链打磨完成 (导出成功)！")
+      setStatus("导出完成", "success")
     } catch (err) {
-      setStatus(`合成失败: ${err.message}`)
+      setStatus(`合成失败: ${err.message}`, "error")
     }
   }
 
   const handleModeSwitch = async (newMode: "auto" | "pick") => {
-    // 再点一次「灵动选区」= 重新开启选区，所以只有「智能全页」需要提前返回
+    // 再点一次「手动选区」= 重新开启选区，所以只有「整页提取」需要提前返回
     if (newMode === mode && newMode === "auto") return
 
     try {
@@ -347,7 +354,7 @@ function IndexSidePanel() {
 
       if (newMode === "pick") {
         if (isRestrictedPage) {
-          setStatus("由于安全限制，无法在此页面开启选区")
+          setStatus("当前页面不支持选区", "warn")
           return
         }
         await sendTabMessage(tab.id, tab.url, { type: "ENTER_PICK_MODE" })
@@ -357,7 +364,7 @@ function IndexSidePanel() {
       setMode(newMode)
     } catch (e) {
       console.error(e)
-      if (newMode === "pick") setStatus("选区启动失败")
+      if (newMode === "pick") setStatus("选区启动失败", "error")
     }
   }
 
@@ -382,7 +389,7 @@ function IndexSidePanel() {
         {isRestrictedPage && (
           <div className="ws-alert">
             <Icon d={ICONS.alert} />
-            <span>当前是浏览器内部页面，无法读取网页内容。请切换到普通网页；暂存里的内容仍可正常导出。</span>
+            <span>当前为浏览器内部页面，无法读取内容。请切换到普通网页；暂存内容仍可导出。</span>
           </div>
         )}
 
@@ -390,16 +397,16 @@ function IndexSidePanel() {
           <div className="ws-field-label">采集方式</div>
           <div className="ws-segmented">
             <button className={mode === "auto" ? "is-active" : ""} onClick={handleAutoMode}>
-              智能全页
+              整页提取
             </button>
             <button className={mode === "pick" ? "is-active" : ""} onClick={handlePickMode}>
-              灵动选区
+              手动选区
             </button>
           </div>
 
           {mode === "auto" ? (
             <div className="ws-mode-body">
-              <p className="ws-hint">自动提取整页正文，剔除导航、广告与侧栏。</p>
+              <p className="ws-hint">自动提取正文，剔除导航、广告与侧栏。</p>
               <button
                 className="ws-btn ws-btn-primary ws-btn-block"
                 onClick={addToBasket}
@@ -411,9 +418,7 @@ function IndexSidePanel() {
             </div>
           ) : (
             <div className="ws-mode-body">
-              <p className="ws-hint">
-                鼠标在页面上移动到目标位置，用下面的快捷键控制，不用去够按钮。
-              </p>
+              <p className="ws-hint">把鼠标移到目标位置，用快捷键操作。</p>
               <ul className="ws-keymap">
                 {PICK_KEYMAP.map((item) => (
                   <li key={item.text}>
@@ -439,7 +444,7 @@ function IndexSidePanel() {
               <span className="ws-switch-title">自动滚动</span>
               <span className="ws-switch-desc">
                 {virtualListDetected
-                  ? "检测到虚拟列表，开启后边滚动边采集全部条目。"
+                  ? "检测到虚拟列表，开启后滚动采集全部条目。"
                   : "当前页面未检测到虚拟列表。"}
               </span>
             </span>
@@ -480,7 +485,7 @@ function IndexSidePanel() {
           {basket.length === 0 ? (
             <div className="ws-empty">
               <Icon d={ICONS.inbox} size={26} />
-              <p>暂存还是空的</p>
+              <p>暂存为空</p>
             </div>
           ) : (
             <ol className="ws-clip-list">
@@ -557,10 +562,36 @@ function IndexSidePanel() {
 
       <div className="ws-actionbar">
         {status && (
-          <div className={`ws-toast ${status.includes("成功") ? "is-success" : "is-error"}`} role="status">
+          <div className={`ws-toast is-${statusType}`} role="status">
             {status}
           </div>
         )}
+
+        <div className="ws-title-row">
+          <label className="ws-title-label" htmlFor="ws-doc-title">
+            标题
+          </label>
+          <input
+            id="ws-doc-title"
+            className="ws-title-input"
+            type="text"
+            value={docTitle}
+            onChange={(e) => setDocTitle(e.target.value)}
+            placeholder={autoTitle}
+            disabled={basket.length === 0}
+          />
+          {docTitle && (
+            <button
+              type="button"
+              className="ws-title-clear"
+              title="恢复自动标题"
+              aria-label="恢复自动标题"
+              onClick={() => setDocTitle("")}
+            >
+              <Icon d={ICONS.close} size={12} />
+            </button>
+          )}
+        </div>
 
         <div className="ws-action-row">
           <div className="ws-format" role="group" aria-label="导出格式">

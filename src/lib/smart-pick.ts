@@ -1,12 +1,12 @@
 /**
- * 灵动选区（Smart Pick）
+ * 手动选区（Smart Pick）
  *
  * 交互原则：页面上不放任何可点击按钮。
  * 鼠标只负责「指向」，所有控制都交给键盘快捷键——否则为了点按钮移动鼠标时，
  * 指针下的 DOM 元素会跟着变，选区就跑了。
  *
  * 快捷键：↑/← 选父级、↓/→ 选子级、空格 连选、Enter 完成采集、Esc 退出。
- * 同一套说明会同时出现在页面底部的悬浮提示条和侧边栏「灵动选区」面板里。
+ * 同一套说明会同时出现在页面底部的悬浮提示条和侧边栏「手动选区」面板里。
  */
 
 let isPickMode = false
@@ -72,7 +72,7 @@ function buildHintBar() {
     "pointer-events:none;display:none;"
 
   const title = document.createElement("span")
-  title.innerText = "灵动选区"
+  title.innerText = "手动选区"
   title.style.cssText =
     "display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#fff;white-space:nowrap;"
   const dot = document.createElement("i")
@@ -289,13 +289,24 @@ export function exitPickMode() {
   document.body.style.cursor = ""
 }
 
-/** Esc 退出：除了清理页面 UI，还要通知侧边栏把「采集方式」切回智能全页 */
+/** Esc 退出：除了清理页面 UI，还要通知侧边栏把「采集方式」切回整页提取 */
 function cancelPickMode() {
   exitPickMode()
   chrome.runtime.sendMessage({ type: "PICK_EXIT" }).catch(() => {})
 }
 
-function showNotice(text: string) {
+type NoticeType = "info" | "success" | "warn" | "error"
+
+// 与侧边栏提示同一套语义配色：进行中=蓝、成功=绿、警告=琥珀、失败=红
+const NOTICE_THEME: Record<NoticeType, { bg: string; fg: string; icon: string; badge: string }> = {
+  info: { bg: "#2563eb", fg: "#ffffff", icon: "i", badge: "rgba(255,255,255,0.22)" },
+  success: { bg: "#059669", fg: "#ffffff", icon: "✓", badge: "rgba(255,255,255,0.22)" },
+  warn: { bg: "#f59e0b", fg: "#3f2a06", icon: "!", badge: "rgba(63,42,6,0.16)" },
+  error: { bg: "#dc2626", fg: "#ffffff", icon: "✕", badge: "rgba(255,255,255,0.22)" }
+}
+
+function showNotice(text: string, type: NoticeType = "info") {
+  const theme = NOTICE_THEME[type]
   const notice = document.createElement("div")
   const style = document.createElement("style")
   style.textContent = `
@@ -311,10 +322,20 @@ function showNotice(text: string) {
   document.head.appendChild(style)
 
   notice.style.cssText =
-    "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a73e8;color:white;" +
-    "padding:12px 24px;border-radius:30px;z-index:1000001;box-shadow:0 4px 12px rgba(0,0,0,0.2);" +
-    "font-weight:bold;animation:web-saver-fadeInDown 0.3s ease;pointer-events:none;font-family:sans-serif;"
-  notice.innerText = text
+    `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${theme.bg};color:${theme.fg};` +
+    "display:flex;align-items:center;gap:8px;" +
+    "padding:10px 20px 10px 12px;border-radius:30px;z-index:1000001;" +
+    "box-shadow:0 6px 20px rgba(0,0,0,0.24);font-weight:600;font-size:14px;line-height:1.2;" +
+    "animation:web-saver-fadeInDown 0.3s ease;pointer-events:none;" +
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+
+  const badge = document.createElement("span")
+  badge.style.cssText =
+    `flex:none;width:18px;height:18px;border-radius:50%;background:${theme.badge};` +
+    "display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;"
+  badge.textContent = theme.icon
+  notice.appendChild(badge)
+  notice.appendChild(document.createTextNode(text))
   document.body.appendChild(notice)
 
   setTimeout(() => {
@@ -348,7 +369,7 @@ async function finishSelection() {
 
   exitPickMode()
 
-  showNotice(`✓ 啪嗒！已装进口袋（${segmentCount} 个片段）`)
+  showNotice(`已加入暂存（${segmentCount} 个片段）`, "success")
 
   chrome.runtime.sendMessage({
     type: "PICK_COMPLETE",

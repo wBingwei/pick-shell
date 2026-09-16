@@ -3,6 +3,8 @@ import { convertToMarkdown } from "../../lib/markdown-engine"
 import { openPrintPage } from "../../lib/print-pdf"
 import { sendTabMessage } from "../../lib/messaging"
 
+export type StatusType = "info" | "success" | "warn" | "error"
+
 export function useContentAction(
   format: string,
   deepCapture: boolean,
@@ -10,11 +12,18 @@ export function useContentAction(
   pdfCss: string
 ) {
   const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState("")
+  const [status, setStatusText] = useState("")
+  const [statusType, setStatusType] = useState<StatusType>("info")
+
+  // 统一收口：文案 + 类型一起设置，避免各处自己判断颜色
+  const setStatus = useCallback((text: string, type: StatusType = "info") => {
+    setStatusText(text)
+    setStatusType(type)
+  }, [])
 
   const handleExport = useCallback(async (params?: any) => {
     setLoading(true)
-    setStatus("正在处理数据...")
+    setStatus("处理中...", "info")
 
     try {
       let article = params
@@ -35,7 +44,7 @@ export function useContentAction(
       }
 
       if (needsImageProcess && article) {
-        setStatus("正在内联图片 (Base64)...")
+        setStatus("正在内联图片...", "info")
         const res = await sendTabMessage(tab.id, tab.url, {
           type: "PROCESS_IMAGES",
           html: article.content
@@ -46,14 +55,14 @@ export function useContentAction(
 
       if (article?.error) throw new Error(article.error)
       if (!article) {
-        setStatus("提取失败，请重试")
+        setStatus("提取失败，请重试", "error")
         setLoading(false)
         return
       }
 
       // 两种格式都在浏览器本地完成，不再依赖后端服务
       if (format === "markdown") {
-        setStatus("正在本地转换为 MARKDOWN...")
+        setStatus("正在转换 Markdown...", "info")
 
         const sources: string[] = params?.sources?.length ? params.sources : tab.url ? [tab.url] : []
         const text = await convertToMarkdown(article.content, article.title, sources)
@@ -61,10 +70,10 @@ export function useContentAction(
         const url = URL.createObjectURL(blob)
         const filename = `${article.title || "export"}.md`
         await chrome.downloads.download({ url, filename, saveAs: true })
-        setStatus("导出成功！")
+        setStatus("导出成功！", "success")
       } else {
         // PDF：打开扩展内的打印页，由 Chrome 打印管线渲染，用户选「另存为 PDF」即可
-        setStatus("正在准备打印页...")
+        setStatus("正在准备打印页...", "info")
 
         await openPrintPage({
           title: article.title || "拾贝导出",
@@ -72,11 +81,11 @@ export function useContentAction(
           css: pdfCss
         })
 
-        setStatus("已在新标签页打开，选择「另存为 PDF」即可")
+        setStatus("已打开打印页，选择「另存为 PDF」", "success")
       }
     } catch (err) {
       console.error(err)
-      setStatus(`错误: ${err.message}`)
+      setStatus(`错误: ${err.message}`, "error")
     } finally {
       setLoading(false)
     }
@@ -85,6 +94,7 @@ export function useContentAction(
   return {
     loading,
     status,
+    statusType,
     setStatus,
     handleExport
   }

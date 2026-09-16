@@ -15,7 +15,7 @@ function PrintPage() {
     chrome.storage.local.get(PRINT_JOB_KEY, (result) => {
       const stored = result?.[PRINT_JOB_KEY] as PrintJob | undefined
       if (!stored?.html) {
-        setError("没有找到待打印的内容。请回到侧边栏，重新点击「导出」。")
+        setError("未找到待打印内容，请回侧边栏重新导出。")
         return
       }
       // 读到就删，避免内容长期留在本地存储里
@@ -90,12 +90,11 @@ function PrintPage() {
         <div className="print-bar-text">
           <strong>拾贝 · 导出 PDF</strong>
           <span>
-            在打印对话框里把「目标打印机」选为 <em>另存为 PDF</em>；建议展开「更多设置」，
-            取消勾选「页眉和页脚」，去掉网址与页码。
+            打印对话框里把「目标打印机」选为 <em>另存为 PDF</em>，并在「更多设置」中取消勾选「页眉和页脚」。
           </span>
         </div>
         <div className="print-bar-actions">
-          {printed && <span className="print-bar-done">已生成？可以关闭此页了</span>}
+          {printed && <span className="print-bar-done">已生成，可关闭此页</span>}
           <button type="button" className="print-btn print-btn-primary" onClick={() => window.print()}>
             {printed ? "再次打印" : "打印 / 另存为 PDF"}
           </button>

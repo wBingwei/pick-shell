@@ -88,7 +88,7 @@ function EditorPage() {
   useEffect(() => {
     takeEditJob().then((loaded) => {
       if (!loaded) {
-        setError("没有找到要编辑的片段，请回到侧边栏重新点击「编辑」。")
+        setError("未找到该片段，请回侧边栏重新打开。")
         return
       }
       document.title = loaded.title ? `编辑 · ${loaded.title}` : "拾贝 · 编辑片段"
@@ -312,12 +312,12 @@ function EditorPage() {
             spellCheck={false}
             onChange={(e) => setMarkdown(e.target.value)}
             onKeyDown={handleTab}
-            placeholder="在这里编辑 Markdown，右侧实时预览……"
+            placeholder="编辑 Markdown，右侧实时预览"
           />
         </section>
 
         <section className="editor-pane">
-          <div className="editor-pane-head">预览（与导出效果一致）</div>
+          <div className="editor-pane-head">预览</div>
           <iframe
             ref={previewRef}
             className="editor-preview"

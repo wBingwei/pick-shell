@@ -14,7 +14,7 @@
   --ws-err-bg: #fef2f2;
   --ws-err-fg: #991b1b;
   --ws-warn-bg: #fffbeb;
-  --ws-warn-border: #fcd34d;
+  --ws-warn-border: #f59e0b;
   --ws-warn-fg: #92400e;
 
   --ws-bg: #f8fafc;
@@ -46,7 +46,7 @@
     --ws-err-bg: #2c1618;
     --ws-err-fg: #fca5a5;
     --ws-warn-bg: #2a2313;
-    --ws-warn-border: #6b5718;
+    --ws-warn-border: #b4841c;
     --ws-warn-fg: #fcd34d;
 
     --ws-bg: #0e1420;
@@ -666,6 +666,68 @@ input.ws-switch:disabled {
   gap: 8px;
 }
 
+/* 导出标题：留空即用自动标题（占位符中显示） */
+.ws-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ws-title-label {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ws-text-2);
+}
+
+.ws-title-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-r-sm);
+  background: var(--ws-surface-2);
+  color: var(--ws-text);
+  font-family: inherit;
+  font-size: 11.5px;
+}
+
+.ws-title-input::placeholder {
+  color: var(--ws-text-3);
+}
+
+.ws-title-input:focus {
+  border-color: var(--ws-blue);
+  background: var(--ws-surface);
+  outline: none;
+}
+
+.ws-title-input:disabled {
+  opacity: 0.6;
+}
+
+.ws-title-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ws-text-3);
+  cursor: pointer;
+}
+
+.ws-title-clear:hover {
+  background: var(--ws-surface-2);
+  color: var(--ws-text);
+}
+
 /* 导出格式：紧凑分段控件 */
 .ws-format {
   flex: none;
@@ -713,11 +775,25 @@ input.ws-switch:disabled {
   animation: ws-toast-in 0.18s ease-out;
 }
 
+/* 进行中 / 普通提示 */
+.ws-toast.is-info {
+  background: var(--ws-blue-soft);
+  color: var(--ws-blue-strong);
+}
+
+/* 成功 */
 .ws-toast.is-success {
   background: var(--ws-ok-bg);
   color: var(--ws-ok-fg);
 }
 
+/* 警告：操作被限制，但不算失败 */
+.ws-toast.is-warn {
+  background: var(--ws-warn-bg);
+  color: var(--ws-warn-fg);
+}
+
+/* 失败 */
 .ws-toast.is-error {
   background: var(--ws-err-bg);
   color: var(--ws-err-fg);
