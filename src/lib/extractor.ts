@@ -1,32 +1,6 @@
 import { Readability } from "@mozilla/readability"
 import { getBestScrollableContainer, deepCaptureContainer } from "./deep-capture"
-import { isScrollable } from "./utils"
 import { processHtmlImages } from "./image-processor"
-
-async function extractFromElement(el: HTMLElement, format: string, deepCapture: boolean) {
-  let content = el.outerHTML
-  const pageTitle = document.title || "Untitled Fragment"
-
-  if (deepCapture) {
-    const container = isScrollable(el) ? el : getBestScrollableContainer(el)
-    if (container) {
-      const captured = await deepCaptureContainer(container)
-      if (captured) content = `<div class="fp-deep-capture">${captured}</div>`
-    }
-  }
-
-  if (format === "pdf") {
-    content = await processHtmlImages(content)
-  }
-
-  return {
-    title: pageTitle,
-    content,
-    excerpt: "",
-    byline: "",
-    siteName: ""
-  }
-}
 
 export async function extractContent(format: string = "markdown", deepCapture: boolean = false) {
   if (deepCapture) {
@@ -98,10 +72,4 @@ export async function extractContent(format: string = "markdown", deepCapture: b
     byline: article.byline || "",
     siteName: article.siteName || ""
   }
-}
-
-export async function extractBySelector(selector: string, format: string = "markdown", deepCapture: boolean = false) {
-  const el = document.querySelector(selector) as HTMLElement | null
-  if (!el) return null
-  return extractFromElement(el, format, deepCapture)
 }

@@ -1,8 +1,10 @@
+import { sendTabMessage } from "./lib/messaging"
+
 export {}
 
 // 监听下载或其他后台任务
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Web Saver 已安装")
+  console.log("拾贝 已安装")
   
   // 设置侧边栏行为：点击图标打开侧边栏
   if (chrome.sidePanel) {
@@ -13,7 +15,7 @@ chrome.runtime.onInstalled.addListener(() => {
   // 创建右键菜单
   chrome.contextMenus.create({
     id: "extract-selection",
-    title: "Web Saver: 导出当前选中区域",
+    title: "拾贝：导出当前选中区域",
     contexts: ["selection"]
   })
 })
@@ -22,18 +24,18 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "extract-selection" && tab?.id) {
     // 处理右键选中内容导出
     const selectedHtml = `<div>${info.selectionText}</div>` // 简单处理，实际可更复杂
-    chrome.tabs.sendMessage(tab.id, {
+    sendTabMessage(tab.id, tab.url, {
       type: "PICK_COMPLETE_DIRECT",
       payload: {
         content: selectedHtml,
         title: `${tab.title} (右键片段)`
       }
-    })
+    }).catch((err) => console.warn("[web-saver] 右键导出失败:", err.message))
   }
 })
 
 
-// 如果以后需要处理跨域图片抓取，可以在这里实现
+// 由内容脚本发起：在后台跨域取图并转成 data URL，避免 canvas 被跨域图片污染
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "FETCH_IMAGE_BLOB") {
     fetch(request.url)

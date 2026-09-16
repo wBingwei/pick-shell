@@ -1,0 +1,53 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>拾贝（深色）</title>
+  <!-- 与 icon.svg 同造型：底板换深色，海獭整体提亮以保证对比 -->
+  <defs>
+    <linearGradient id="sb-dark-bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E2E4C"/>
+      <stop offset="1" stop-color="#0B1424"/>
+    </linearGradient>
+    <radialGradient id="sb-dark-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(64 44) scale(86 74)">
+      <stop stop-color="#4C8DFF" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#4C8DFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="30" fill="url(#sb-dark-bg)"/>
+  <rect width="128" height="128" rx="30" fill="url(#sb-dark-glow)"/>
+
+  <!-- 耳朵 -->
+  <circle cx="28" cy="36" r="10" fill="#96633D"/>
+  <circle cx="100" cy="36" r="10" fill="#96633D"/>
+
+  <!-- 头：深底上提亮一档 -->
+  <ellipse cx="64" cy="48" rx="38" ry="34" fill="#B07C52"/>
+
+  <!-- 腮红 -->
+  <circle cx="34" cy="64" r="7" fill="#F0A9A9" fill-opacity="0.55"/>
+  <circle cx="94" cy="64" r="7" fill="#F0A9A9" fill-opacity="0.55"/>
+
+  <!-- 面罩 -->
+  <ellipse cx="64" cy="68" rx="30" ry="16" fill="#FFF7E9"/>
+
+  <!-- 眼睛 -->
+  <circle cx="48" cy="54" r="7" fill="#2A1A0F"/>
+  <circle cx="50.4" cy="51.4" r="2.4" fill="#FFFFFF"/>
+  <circle cx="80" cy="54" r="7" fill="#2A1A0F"/>
+  <circle cx="82.4" cy="51.4" r="2.4" fill="#FFFFFF"/>
+
+  <!-- 鼻子 -->
+  <ellipse cx="64" cy="64" rx="10" ry="6.5" fill="#2A1A0F"/>
+
+  <!-- 胡须 -->
+  <path d="M38 66L28 62M38 74L28 74" stroke="#FBE8CB" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M90 66L100 62M90 74L100 74" stroke="#FBE8CB" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- 双爪 -->
+  <circle cx="44" cy="100" r="10.5" fill="#D8B78B"/>
+  <circle cx="84" cy="100" r="10.5" fill="#D8B78B"/>
+
+  <!-- 扇贝 -->
+  <path d="M46 94q4.5-7 9 0q4.5-7 9 0q4.5-7 9 0q4.5-7 9 0a18 18 0 0 1-36 0Z" fill="#F7A97A"/>
+  <path d="M64 111L54 96M64 111L64 92M64 111L74 96" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="2" stroke-linecap="round"/>
+</svg>

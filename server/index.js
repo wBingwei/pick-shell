@@ -1,20 +1,17 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
-const TurndownService = require('turndown');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5010;
 
 const PUPPETEER_CACHE_DIR = path.join(__dirname, 'temp', 'puppeteer');
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' })); // 支持大体积 Base64
-
-const turndownService = new TurndownService();
 
 // 核心转换函数 - 易于迁移至云函数
 async function generatePdf(html, css, title) {
@@ -77,35 +74,22 @@ app.post('/convert', async (req, res) => {
     }
     const finalTitle = title || 'Untitled';
 
+    // Markdown 已改为插件前端本地转换（lib/markdown-engine.ts），后端只负责 PDF
+    if (format && format !== 'pdf') {
+        return res.status(400).send(`Unsupported format: backend only handles "pdf" (got "${format}")`);
+    }
+
     try {
-        if (format === 'markdown') {
-            const markdown = turndownService.turndown(html);
-            const content = `# ${finalTitle}\n\n${markdown}`;
-            res.setHeader('Content-Type', 'text/markdown');
-            res.setHeader('Content-Disposition', `attachment; filename=export.md`);
-            return res.send(content);
-        } else if (format === 'pdf') {
-            const pdfBuffer = await generatePdf(html, css, finalTitle);
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Length', pdfBuffer.length);
-            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(finalTitle)}.pdf"`);
-            return res.end(pdfBuffer, 'binary');
-        } else {
-            return res.status(400).send('Unsupported format');
-        }
+        const pdfBuffer = await generatePdf(html, css, finalTitle);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', pdfBuffer.length);
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(finalTitle)}.pdf"`);
+        return res.end(pdfBuffer, 'binary');
     } catch (error) {
         console.error('Conversion error:', error);
         res.status(500).send('Internal Server Error: ' + error.message);
     }
 });
-
-app.post('/knowledge-base/save', (req, res) => {
-    const { title, url, content, timestamp } = req.body;
-    console.log(`[Knowledge Base] Saving item: "${title}" from ${url} at ${timestamp}`);
-    // 这里未来可以对接数据库，如 MongoDB 或 PostgreSQL
-    res.status(200).json({ success: true, message: 'Saved to knowledge base' });
-});
-
 
 app.listen(port, () => {
     console.log(`WebScribe Backend running at http://localhost:${port}`);
