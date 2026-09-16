@@ -1,4 +1,5 @@
 import TurndownService from "turndown"
+import { marked } from "marked"
 // @ts-ignore
 import { gfm } from "turndown-plugin-gfm"
 
@@ -98,6 +99,22 @@ const turndownService = createTurndownService()
  */
 function collapseDuplicateCodeBlocks(markdown: string): string {
   return markdown.replace(/(```[^\n]*\n[\s\S]*?\n```)\s*\1/g, "$1")
+}
+
+/**
+ * Markdown → HTML（GFM：表格、任务列表、删除线开箱可用）。
+ *
+ * 用于两处：编辑器的实时预览，以及用户在编辑器里改完 Markdown 后
+ * 回写 `content`——这样导出链路（PDF 打印页、Markdown 合成）无需任何改动。
+ */
+export function markdownToHtml(markdown: string) {
+  if (!markdown) return ""
+  try {
+    return marked.parse(markdown, { async: false }) as string
+  } catch (e) {
+    console.warn("[web-saver] Markdown 渲染失败:", e)
+    return ""
+  }
 }
 
 /**

@@ -623,7 +623,6 @@ input.ws-switch:disabled {
 .ws-clip-side {
   flex: none;
   display: flex;
-  flex-direction: column;
   gap: 2px;
 }
 

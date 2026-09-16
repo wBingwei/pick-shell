@@ -1,19 +1,23 @@
-import { useState, useEffect, type DragEvent } from "react"
+import { useState, useEffect, useRef, type DragEvent } from "react"
 import "./sidepanel.css"
 import { useContentAction } from "./popup/hooks/useContentAction"
 import { convertToMarkdown, htmlToMarkdown } from "./lib/markdown-engine"
 import { sendTabMessage } from "./lib/messaging"
 import { isRestrictedUrl } from "./lib/utils"
+import {
+  BASKET_KEY,
+  BASKET_UPDATED,
+  getBasket,
+  openEditor,
+  setBasket as persistBasket
+} from "./lib/basket"
 
 // PDF 导出固定使用「现代极简」主题
 import modernCss from "data-text:./styles/modern.css"
 
-// 导入图标：浅色/深色两版同几何、只换配色（工具栏固定用浅色版）
+// 导入图标：图标本身在浅色/深色背景上都可读，无需再分两套配色
 import webSaverLogoRaw from "url:../assets/icon.svg"
-import webSaverLogoDarkRaw from "url:../assets/icon-dark.svg"
 const webSaverLogo = typeof webSaverLogoRaw === "string" ? webSaverLogoRaw : (webSaverLogoRaw as any).default
-const webSaverLogoDark =
-  typeof webSaverLogoDarkRaw === "string" ? webSaverLogoDarkRaw : (webSaverLogoDarkRaw as any).default
 
 // 内联图标，避免为了几个小图标引入图标库
 const ICONS = {
@@ -25,7 +29,8 @@ const ICONS = {
   alert: "M12 9v4m0 4h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
   inbox: "M3 12h4l2 3h6l2-3h4M5 5h14l2 7v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5l2-7Z",
   expand: "m6 9 6 6 6-6",
-  collapse: "m18 15-6-6-6 6"
+  collapse: "m18 15-6-6-6 6",
+  edit: "M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"
 }
 
 function Icon({ d, size = 14 }: { d: string; size?: number }) {
@@ -86,6 +91,9 @@ function IndexSidePanel() {
   const [overIndex, setOverIndex] = useState<number | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
+  // 读取完成前不允许写回，否则首帧的空数组会把已存的暂存覆盖掉
+  const hydratedRef = useRef(false)
+
   const {
     loading,
     status,
@@ -102,17 +110,19 @@ function IndexSidePanel() {
     // 清理旧版本遗留的数据
     chrome.storage.local.remove(["knowledgeBase", "saveToKnowledgeBase", "webhookConfig", "webhookLogs", "lastPickedData"])
 
-    chrome.storage.local.get(["deepCaptureEnabled", "basket"], (result) => {
+    chrome.storage.local.get(["deepCaptureEnabled", BASKET_KEY], (result) => {
       if (typeof result.deepCaptureEnabled === "boolean") setDeepCapture(result.deepCaptureEnabled)
-      if (Array.isArray(result.basket)) {
+      const stored = result[BASKET_KEY]
+      if (Array.isArray(stored)) {
         // 旧数据只存了 HTML，补一份 Markdown，列表才能直接展示转换结果
         setBasket(
-          result.basket.map((clip: any) => ({
+          stored.map((clip: any) => ({
             ...clip,
             markdown: clip.markdown || htmlToMarkdown(clip.content || "")
           }))
         )
       }
+      hydratedRef.current = true
     })
 
     const updateCurrentTabInfo = async () => {
@@ -151,7 +161,8 @@ function IndexSidePanel() {
   }, [deepCapture])
 
   useEffect(() => {
-    chrome.storage.local.set({ basket })
+    if (!hydratedRef.current) return
+    persistBasket(basket)
     if (basket.length > 0) {
       chrome.action.setBadgeText({ text: basket.length.toString() })
       chrome.action.setBadgeBackgroundColor({ color: "#1a73e8" })
@@ -176,6 +187,10 @@ function IndexSidePanel() {
       // 页面里按 Esc 退出选区后，侧边栏的状态要跟着回到「智能全页」
       if (message.type === "PICK_EXIT") {
         setMode("auto")
+      }
+      // 编辑窗口保存后回来重新读取，保证两边一致
+      if (message.type === BASKET_UPDATED) {
+        getBasket().then(setBasket)
       }
     }
     chrome.runtime.onMessage.addListener(listener)
@@ -353,10 +368,9 @@ function IndexSidePanel() {
     <div className="ws-app">
       <header className="ws-header">
         <div className="ws-brand">
-          <picture className="ws-brand-logo-slot">
-            <source media="(prefers-color-scheme: dark)" srcSet={webSaverLogoDark} />
+          <div className="ws-brand-logo-slot">
             <img src={webSaverLogo} alt="" className="ws-brand-logo" />
-          </picture>
+          </div>
           <div className="ws-brand-text">
             <h1>拾贝</h1>
             <p>保存网页内容为 Markdown/PDF</p>
@@ -499,6 +513,17 @@ function IndexSidePanel() {
                     {clip.markdown?.trim() || "（该片段没有可展示的文本）"}
                   </div>
                   <div className="ws-clip-side">
+                    <button
+                      className="ws-clip-btn ws-clip-edit"
+                      title="编辑 Markdown"
+                      aria-label="编辑该片段"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEditor(clip)
+                      }}
+                    >
+                      <Icon d={ICONS.edit} size={13} />
+                    </button>
                     <button
                       className="ws-clip-btn ws-clip-toggle"
                       title={expandedId === clip.id ? "收起" : "展开全文"}
