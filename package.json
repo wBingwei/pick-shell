@@ -1,9 +1,9 @@
 {
-  "name": "web-saver",
+  "name": "shell-picker",
   "displayName": "拾贝",
   "version": "0.1.0",
   "description": "拾贝 - 保存网页内容为 Markdown/PDF。支持跨网页采集与智能拼接。",
-  "author": "web-saver",
+  "author": "shell-picker",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",

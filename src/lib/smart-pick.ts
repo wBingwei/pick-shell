@@ -310,11 +310,11 @@ function showNotice(text: string, type: NoticeType = "info") {
   const notice = document.createElement("div")
   const style = document.createElement("style")
   style.textContent = `
-    @keyframes web-saver-fadeInDown {
+    @keyframes shell-picker-fadeInDown {
       from { opacity: 0; transform: translate(-50%, -20px); }
       to { opacity: 1; transform: translate(-50%, 0); }
     }
-    @keyframes web-saver-fadeOutUp {
+    @keyframes shell-picker-fadeOutUp {
       from { opacity: 1; transform: translate(-50%, 0); }
       to { opacity: 0; transform: translate(-50%, -20px); }
     }
@@ -326,7 +326,7 @@ function showNotice(text: string, type: NoticeType = "info") {
     "display:flex;align-items:center;gap:8px;" +
     "padding:10px 20px 10px 12px;border-radius:30px;z-index:1000001;" +
     "box-shadow:0 6px 20px rgba(0,0,0,0.24);font-weight:600;font-size:14px;line-height:1.2;" +
-    "animation:web-saver-fadeInDown 0.3s ease;pointer-events:none;" +
+    "animation:shell-picker-fadeInDown 0.3s ease;pointer-events:none;" +
     'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
 
   const badge = document.createElement("span")
@@ -339,7 +339,7 @@ function showNotice(text: string, type: NoticeType = "info") {
   document.body.appendChild(notice)
 
   setTimeout(() => {
-    notice.style.animation = "web-saver-fadeOutUp 0.3s ease"
+    notice.style.animation = "shell-picker-fadeOutUp 0.3s ease"
     setTimeout(() => {
       notice.remove()
       style.remove()

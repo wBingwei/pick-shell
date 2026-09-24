@@ -30,7 +30,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         content: selectedHtml,
         title: `${tab.title} (右键片段)`
       }
-    }).catch((err) => console.warn("[web-saver] 右键导出失败:", err.message))
+    }).catch((err) => console.warn("[shell-picker] 右键导出失败:", err.message))
   }
 })
 
