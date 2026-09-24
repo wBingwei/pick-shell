@@ -1,11 +1,12 @@
 import { sendTabMessage } from "./lib/messaging"
+import { t } from "./lib/i18n"
 
 export {}
 
 // 监听下载或其他后台任务
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("拾贝 已安装")
-  
+  console.log("[pick-shell] installed")
+
   // 设置侧边栏行为：点击图标打开侧边栏
   if (chrome.sidePanel) {
     chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
@@ -15,7 +16,7 @@ chrome.runtime.onInstalled.addListener(() => {
   // 创建右键菜单
   chrome.contextMenus.create({
     id: "extract-selection",
-    title: "拾贝：导出当前选中区域",
+    title: t("menu_extract_selection"),
     contexts: ["selection"]
   })
 })
@@ -28,7 +29,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       type: "PICK_COMPLETE_DIRECT",
       payload: {
         content: selectedHtml,
-        title: `${tab.title} (右键片段)`
+        title: `${tab.title} ${t("menu_suffix_selection")}`
       }
     }).catch((err) => console.warn("[pick-shell] 右键导出失败:", err.message))
   }

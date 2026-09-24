@@ -2,6 +2,7 @@ import TurndownService from "turndown"
 import { marked } from "marked"
 // @ts-ignore
 import { gfm } from "turndown-plugin-gfm"
+import { t } from "./i18n"
 
 // 取代码文本：优先最内层 <code>，这样能把 <pre> 里的语言标签排除在外
 function getCodeText(pre: any): string {
@@ -60,7 +61,7 @@ const createTurndownService = () => {
     replacement: function (content, node: any) {
       const src = node.getAttribute("src") || ""
       if (!src) return ""
-      return `\n\n[🎥 点击观看嵌入内容](${src})\n\n`
+      return `\n\n[${t("embed_video_link")}](${src})\n\n`
     }
   })
 

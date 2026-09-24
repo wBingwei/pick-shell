@@ -11,6 +11,7 @@ import {
   openEditor,
   setBasket as persistBasket
 } from "./lib/basket"
+import { t } from "./lib/i18n"
 
 // PDF 导出固定使用「现代极简」主题
 import modernCss from "data-text:./styles/modern.css"
@@ -66,12 +67,12 @@ function GripIcon() {
 }
 
 // 「手动选区」的快捷键说明（与页面底部悬浮提示保持一致）
-const PICK_KEYMAP: Array<{ keys: string[]; text: string }> = [
-  { keys: ["↑", "←"], text: "选父级" },
-  { keys: ["↓", "→"], text: "选子级" },
-  { keys: ["空格"], text: "连选片段" },
-  { keys: ["Enter"], text: "采集所选" },
-  { keys: ["Esc"], text: "退出选区" }
+const buildPickKeymap = (): Array<{ keys: string[]; text: string }> => [
+  { keys: ["↑", "←"], text: t("pick_key_parent") },
+  { keys: ["↓", "→"], text: t("pick_key_child") },
+  { keys: [t("key_space")], text: t("pick_key_join_clip") },
+  { keys: ["Enter"], text: t("pick_key_capture_selected") },
+  { keys: ["Esc"], text: t("pick_key_exit_mode") }
 ]
 
 // 需要转发到页面内容脚本的按键
@@ -112,8 +113,8 @@ function IndexSidePanel() {
   // 导出标题：留空则自动生成——只有一个片段用原文标题，多个片段用合成标题
   const autoTitle =
     basket.length > 1
-      ? `拾贝 合成文档 - ${new Date().toLocaleDateString()}`
-      : basket[0]?.title || "拾贝导出"
+      ? t("composed_title", { DATE: new Date().toLocaleDateString() })
+      : basket[0]?.title || t("default_export_title")
   const finalTitle = docTitle.trim() || autoTitle
 
   useEffect(() => {
@@ -233,7 +234,7 @@ function IndexSidePanel() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
       if (!tab?.id) return
-      setStatus("正在提取...", "info")
+      setStatus(t("status_extracting"), "info")
       const article = await sendTabMessage(tab.id, tab.url, { 
         type: "EXTRACT_CONTENT",
         format: "markdown",
@@ -251,10 +252,10 @@ function IndexSidePanel() {
           favicon: `https://www.google.com/s2/favicons?domain=${new URL(tab.url!).hostname}&sz=32`
         }
         setBasket(prev => [...prev, newClip])
-        setStatus("已加入暂存", "success")
+        setStatus(t("status_added"), "success")
       }
     } catch (e) {
-      setStatus("加入暂存失败", "error")
+      setStatus(t("status_add_failed"), "error")
     }
   }
 
@@ -300,7 +301,7 @@ function IndexSidePanel() {
 
   const handleMergeCopy = async () => {
     if (basket.length === 0) return
-    setStatus("正在智能合成...", "info")
+    setStatus(t("status_merging"), "info")
     try {
       // 优先在本地进行 Markdown 合成，避免依赖不稳定的后端服务
       const mergedHtml = basket.map((clip) => `
@@ -313,15 +314,15 @@ function IndexSidePanel() {
       const text = await convertToMarkdown(mergedHtml, finalTitle, sources)
       
       await navigator.clipboard.writeText(text)
-      setStatus("已拷贝到剪贴板", "success")
+      setStatus(t("status_copied"), "success")
     } catch (err) {
-      setStatus(`合成拷贝失败: ${err.message}`, "error")
+      setStatus(t("status_merge_copy_failed", { MSG: err.message }), "error")
     }
   }
 
   const handleMergeExport = async () => {
     if (basket.length === 0) return
-    setStatus("正在合成...", "info")
+    setStatus(t("status_merging_short"), "info")
     
     try {
       const mergedHtml = basket.map((clip, index) => `
@@ -338,9 +339,9 @@ function IndexSidePanel() {
         sources: basket.map((clip) => clip.url).filter(Boolean)
       })
 
-      setStatus("导出完成", "success")
+      setStatus(t("status_export_done"), "success")
     } catch (err) {
-      setStatus(`合成失败: ${err.message}`, "error")
+      setStatus(t("status_merge_failed", { MSG: err.message }), "error")
     }
   }
 
@@ -354,7 +355,7 @@ function IndexSidePanel() {
 
       if (newMode === "pick") {
         if (isRestrictedPage) {
-          setStatus("当前页面不支持选区", "warn")
+          setStatus(t("pick_unsupported_page"), "warn")
           return
         }
         await sendTabMessage(tab.id, tab.url, { type: "ENTER_PICK_MODE" })
@@ -364,7 +365,7 @@ function IndexSidePanel() {
       setMode(newMode)
     } catch (e) {
       console.error(e)
-      if (newMode === "pick") setStatus("选区启动失败", "error")
+      if (newMode === "pick") setStatus(t("pick_start_failed"), "error")
     }
   }
 
@@ -379,8 +380,8 @@ function IndexSidePanel() {
             <img src={webSaverLogo} alt="" className="ws-brand-logo" />
           </div>
           <div className="ws-brand-text">
-            <h1>拾贝</h1>
-            <p>保存网页内容为 Markdown/PDF</p>
+            <h1>{t("extName")}</h1>
+            <p>{t("brand_tagline")}</p>
           </div>
         </div>
       </header>
@@ -389,38 +390,38 @@ function IndexSidePanel() {
         {isRestrictedPage && (
           <div className="ws-alert">
             <Icon d={ICONS.alert} />
-            <span>当前为浏览器内部页面，无法读取内容。请切换到普通网页；暂存内容仍可导出。</span>
+            <span>{t("restricted_page_warning")}</span>
           </div>
         )}
 
         <section className="ws-card">
-          <div className="ws-field-label">采集方式</div>
+          <div className="ws-field-label">{t("capture_method")}</div>
           <div className="ws-segmented">
             <button className={mode === "auto" ? "is-active" : ""} onClick={handleAutoMode}>
-              整页提取
+              {t("mode_auto")}
             </button>
             <button className={mode === "pick" ? "is-active" : ""} onClick={handlePickMode}>
-              手动选区
+              {t("mode_pick")}
             </button>
           </div>
 
           {mode === "auto" ? (
             <div className="ws-mode-body">
-              <p className="ws-hint">自动提取正文，剔除导航、广告与侧栏。</p>
+              <p className="ws-hint">{t("mode_auto_hint")}</p>
               <button
                 className="ws-btn ws-btn-primary ws-btn-block"
                 onClick={addToBasket}
                 disabled={loading || isRestrictedPage}
               >
                 <Icon d={ICONS.plus} />
-                采集当前页
+                {t("capture_current")}
               </button>
             </div>
           ) : (
             <div className="ws-mode-body">
-              <p className="ws-hint">把鼠标移到目标位置，用快捷键操作。</p>
+              <p className="ws-hint">{t("mode_pick_hint")}</p>
               <ul className="ws-keymap">
-                {PICK_KEYMAP.map((item) => (
+                {buildPickKeymap().map((item) => (
                   <li key={item.text}>
                     <span className="ws-keycaps">
                       {item.keys.map((key) => (
@@ -432,7 +433,7 @@ function IndexSidePanel() {
                 ))}
               </ul>
               <button className="ws-btn ws-btn-secondary ws-btn-block" onClick={handleAutoMode}>
-                退出选区
+                {t("exit_pick")}
               </button>
             </div>
           )}
@@ -441,11 +442,11 @@ function IndexSidePanel() {
         <section className="ws-card">
           <label className={`ws-switch-row${virtualListDetected ? "" : " is-disabled"}`}>
             <span className="ws-switch-labels">
-              <span className="ws-switch-title">自动滚动</span>
+              <span className="ws-switch-title">{t("deep_scroll_title")}</span>
               <span className="ws-switch-desc">
                 {virtualListDetected
-                  ? "检测到虚拟列表，开启后滚动采集全部条目。"
-                  : "当前页面未检测到虚拟列表。"}
+                  ? t("deep_scroll_on")
+                  : t("deep_scroll_off")}
               </span>
             </span>
             <input
@@ -461,16 +462,16 @@ function IndexSidePanel() {
         <section className="ws-card">
           <div className="ws-card-head">
             <h2 className="ws-card-title">
-              暂存
+              {t("basket_title")}
               {basket.length > 0 && <span className="ws-badge">{basket.length}</span>}
             </h2>
             <div className="ws-head-actions">
-              {basket.length > 1 && <span className="ws-head-tip">拖拽调整顺序</span>}
+              {basket.length > 1 && <span className="ws-head-tip">{t("basket_drag_tip")}</span>}
               {basket.length > 0 && (
                 <button
                   className="ws-btn ws-btn-ghost ws-btn-icon-sm ws-danger"
-                  title="清空暂存"
-                  aria-label="清空暂存"
+                  title={t("basket_clear")}
+                  aria-label={t("basket_clear")}
                   onClick={() => {
                     setBasket([])
                     setExpandedId(null)
@@ -485,7 +486,7 @@ function IndexSidePanel() {
           {basket.length === 0 ? (
             <div className="ws-empty">
               <Icon d={ICONS.inbox} size={26} />
-              <p>暂存为空</p>
+              <p>{t("basket_empty")}</p>
             </div>
           ) : (
             <ol className="ws-clip-list">
@@ -498,7 +499,7 @@ function IndexSidePanel() {
                     dragIndex === index ? "is-dragging" : "",
                     overIndex === index && dragIndex !== index ? "is-drop-target" : ""
                   ].filter(Boolean).join(" ")}
-                  title="拖拽调整顺序，点击展开/收起"
+                  title={t("basket_drag_title")}
                   draggable
                   onClick={() => setExpandedId((current) => (current === clip.id ? null : clip.id))}
                   onDragStart={handleDragStart(index)}
@@ -515,13 +516,13 @@ function IndexSidePanel() {
                     className="ws-clip-preview"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {clip.markdown?.trim() || "（该片段没有可展示的文本）"}
+                    {clip.markdown?.trim() || t("basket_no_text")}
                   </div>
                   <div className="ws-clip-side">
                     <button
                       className="ws-clip-btn ws-clip-edit"
-                      title="编辑 Markdown"
-                      aria-label="编辑该片段"
+                      title={t("clip_edit_markdown")}
+                      aria-label={t("clip_edit_aria")}
                       onClick={(e) => {
                         e.stopPropagation()
                         openEditor(clip)
@@ -531,8 +532,8 @@ function IndexSidePanel() {
                     </button>
                     <button
                       className="ws-clip-btn ws-clip-toggle"
-                      title={expandedId === clip.id ? "收起" : "展开全文"}
-                      aria-label={expandedId === clip.id ? "收起该片段" : "展开该片段"}
+                      title={expandedId === clip.id ? t("clip_collapse") : t("clip_expand_full")}
+                      aria-label={expandedId === clip.id ? t("clip_collapse_aria") : t("clip_expand_aria")}
                       aria-expanded={expandedId === clip.id}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -543,8 +544,8 @@ function IndexSidePanel() {
                     </button>
                     <button
                       className="ws-clip-btn ws-clip-remove"
-                      title="移除"
-                      aria-label="移除该片段"
+                      title={t("clip_remove")}
+                      aria-label={t("clip_remove_aria")}
                       onClick={(e) => {
                         e.stopPropagation()
                         removeFromBasket(clip.id)
@@ -569,7 +570,7 @@ function IndexSidePanel() {
 
         <div className="ws-title-row">
           <label className="ws-title-label" htmlFor="ws-doc-title">
-            标题
+            {t("doc_title_label")}
           </label>
           <input
             id="ws-doc-title"
@@ -584,8 +585,8 @@ function IndexSidePanel() {
             <button
               type="button"
               className="ws-title-clear"
-              title="恢复自动标题"
-              aria-label="恢复自动标题"
+              title={t("doc_title_restore")}
+              aria-label={t("doc_title_restore")}
               onClick={() => setDocTitle("")}
             >
               <Icon d={ICONS.close} size={12} />
@@ -594,7 +595,7 @@ function IndexSidePanel() {
         </div>
 
         <div className="ws-action-row">
-          <div className="ws-format" role="group" aria-label="导出格式">
+          <div className="ws-format" role="group" aria-label={t("format_group_aria")}>
             <button className={format === "markdown" ? "is-active" : ""} onClick={() => setFormat("markdown")}>
               Markdown
             </button>
@@ -606,8 +607,8 @@ function IndexSidePanel() {
           {format !== "pdf" && (
             <button
               className="ws-btn ws-btn-secondary ws-btn-icon"
-              title="拷贝到剪贴板"
-              aria-label="拷贝到剪贴板"
+              title={t("copy_to_clipboard")}
+              aria-label={t("copy_to_clipboard")}
               onClick={handleMergeCopy}
               disabled={loading || basket.length === 0}
             >
@@ -621,11 +622,11 @@ function IndexSidePanel() {
             disabled={loading || basket.length === 0}
           >
             {loading ? (
-              "正在处理..."
+              t("action_processing")
             ) : (
               <>
                 <Icon d={ICONS.download} />
-                导出
+                {t("btn_export")}
               </>
             )}
           </button>

@@ -1,8 +1,8 @@
 {
   "name": "pick-shell",
-  "displayName": "拾贝",
+  "displayName": "__MSG_extName__",
   "version": "0.1.0",
-  "description": "拾贝 - 保存网页内容为 Markdown/PDF。支持跨网页采集与智能拼接。",
+  "description": "__MSG_extDescription__",
   "author": "pick-shell",
   "scripts": {
     "dev": "plasmo dev",
@@ -36,6 +36,7 @@
     "vitest": "^5.0.1"
   },
   "manifest": {
+    "default_locale": "zh_CN",
     "permissions": [
       "activeTab",
       "storage",

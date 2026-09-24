@@ -2,6 +2,7 @@ import { useCallback, useState } from "react"
 import { convertToMarkdown } from "../../lib/markdown-engine"
 import { openPrintPage } from "../../lib/print-pdf"
 import { sendTabMessage } from "../../lib/messaging"
+import { t } from "../../lib/i18n"
 
 export type StatusType = "info" | "success" | "warn" | "error"
 
@@ -23,13 +24,13 @@ export function useContentAction(
 
   const handleExport = useCallback(async (params?: any) => {
     setLoading(true)
-    setStatus("处理中...", "info")
+    setStatus(t("action_processing"), "info")
 
     try {
       let article = params
       let needsImageProcess = false
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-      if (!tab?.id) throw new Error("无法获取当前页面")
+      if (!tab?.id) throw new Error(t("err_no_active_tab"))
 
       const deepEnabled = deepCapture && virtualListDetected
 
@@ -44,7 +45,7 @@ export function useContentAction(
       }
 
       if (needsImageProcess && article) {
-        setStatus("正在内联图片...", "info")
+        setStatus(t("action_inlining_images"), "info")
         const res = await sendTabMessage(tab.id, tab.url, {
           type: "PROCESS_IMAGES",
           html: article.content
@@ -55,14 +56,14 @@ export function useContentAction(
 
       if (article?.error) throw new Error(article.error)
       if (!article) {
-        setStatus("提取失败，请重试", "error")
+        setStatus(t("action_extract_failed_retry"), "error")
         setLoading(false)
         return
       }
 
       // 两种格式都在浏览器本地完成，不再依赖后端服务
       if (format === "markdown") {
-        setStatus("正在转换 Markdown...", "info")
+        setStatus(t("action_converting_md"), "info")
 
         const sources: string[] = params?.sources?.length ? params.sources : tab.url ? [tab.url] : []
         const text = await convertToMarkdown(article.content, article.title, sources)
@@ -70,22 +71,22 @@ export function useContentAction(
         const url = URL.createObjectURL(blob)
         const filename = `${article.title || "export"}.md`
         await chrome.downloads.download({ url, filename, saveAs: true })
-        setStatus("导出成功！", "success")
+        setStatus(t("action_export_success"), "success")
       } else {
         // PDF：打开扩展内的打印页，由 Chrome 打印管线渲染，用户选「另存为 PDF」即可
-        setStatus("正在准备打印页...", "info")
+        setStatus(t("action_preparing_print"), "info")
 
         await openPrintPage({
-          title: article.title || "拾贝导出",
+          title: article.title || t("default_export_title"),
           html: article.content,
           css: pdfCss
         })
 
-        setStatus("已打开打印页，选择「另存为 PDF」", "success")
+        setStatus(t("action_print_opened"), "success")
       }
     } catch (err) {
       console.error(err)
-      setStatus(`错误: ${err.message}`, "error")
+      setStatus(t("action_error_prefix", { MSG: err.message }), "error")
     } finally {
       setLoading(false)
     }

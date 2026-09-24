@@ -1,4 +1,5 @@
 import { isRestrictedUrl } from "./utils"
+import { t } from "./i18n"
 
 // 明确表示「目标页面里没有监听端」——可以靠动态注入脚本救回
 const NO_RECEIVER_HINTS = [
@@ -11,8 +12,6 @@ const NO_RESPONSE_HINTS = [
   "message port closed",
   "before a response was received"
 ]
-
-const REFRESH_HINT = "无法在当前页面执行脚本，请刷新页面后重试（扩展更新后，已打开的页面需要刷新）"
 
 function getErrorMessage(err: unknown) {
   return err instanceof Error ? err.message : String(err)
@@ -58,23 +57,23 @@ export async function sendTabMessage<T = any>(
     return (await chrome.tabs.sendMessage(tabId, message)) as T
   } catch (err) {
     if (matches(err, NO_RESPONSE_HINTS)) {
-      throw new Error("页面脚本没有响应（内部可能出错了），请刷新页面后重试")
+      throw new Error(t("err_no_response"))
     }
 
     if (!matches(err, NO_RECEIVER_HINTS)) throw err
 
     // 拿不到 url（理论上 host_permissions 为 <all_urls> 时不会发生）时不预判，直接尝试注入
     if (tabUrl && isRestrictedUrl(tabUrl)) {
-      throw new Error("当前页面不支持读取内容（Chrome 内部页面 / 扩展商店等），请切换到普通网页再试")
+      throw new Error(t("err_restricted_page"))
     }
 
-    if (!(await injectContentScript(tabId))) throw new Error(REFRESH_HINT)
+    if (!(await injectContentScript(tabId))) throw new Error(t("err_refresh_hint"))
 
     try {
       return (await chrome.tabs.sendMessage(tabId, message)) as T
     } catch (retryErr) {
-      if (matches(retryErr, NO_RECEIVER_HINTS)) throw new Error(REFRESH_HINT)
-      throw new Error("页面脚本没有响应（内部可能出错了），请刷新页面后重试")
+      if (matches(retryErr, NO_RECEIVER_HINTS)) throw new Error(t("err_refresh_hint"))
+      throw new Error(t("err_no_response"))
     }
   }
 }

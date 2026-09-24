@@ -9,6 +9,8 @@
  * 同一套说明会同时出现在页面底部的悬浮提示条和侧边栏「手动选区」面板里。
  */
 
+import { t } from "./i18n"
+
 let isPickMode = false
 let isMultiPick = false
 let hoveredElement: HTMLElement | null = null
@@ -22,14 +24,16 @@ let hintBar: HTMLDivElement | null = null
 const selectedElements: HTMLElement[] = []
 const markBoxes: HTMLDivElement[] = []
 
-/** 侧边栏与页面共用的一份按键说明 */
-const KEY_HINTS: Array<{ keys: string[]; text: string }> = [
-  { keys: ["↑", "←"], text: "选父级" },
-  { keys: ["↓", "→"], text: "选子级" },
-  { keys: ["空格"], text: "连选" },
-  { keys: ["Enter"], text: "采集" },
-  { keys: ["Esc"], text: "退出" }
-]
+/** 侧边栏与页面共用的一份按键说明。每次进入选区时按当前语言构建，不缓存文案 */
+function buildKeyHints(): Array<{ keys: string[]; text: string }> {
+  return [
+    { keys: ["↑", "←"], text: t("pick_key_parent") },
+    { keys: ["↓", "→"], text: t("pick_key_child") },
+    { keys: [t("key_space")], text: t("pick_key_join") },
+    { keys: ["Enter"], text: t("pick_key_capture") },
+    { keys: ["Esc"], text: t("pick_key_exit") }
+  ]
+}
 
 function ownNodes() {
   return [overlay, highlightBox, markedLayer, hintBar].filter(Boolean) as HTMLElement[]
@@ -72,7 +76,7 @@ function buildHintBar() {
     "pointer-events:none;display:none;"
 
   const title = document.createElement("span")
-  title.innerText = "手动选区"
+  title.innerText = t("mode_pick")
   title.style.cssText =
     "display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#fff;white-space:nowrap;"
   const dot = document.createElement("i")
@@ -84,7 +88,7 @@ function buildHintBar() {
   sep.style.cssText = "width:1px;height:14px;background:rgba(255,255,255,0.22);"
   hintBar.appendChild(sep)
 
-  KEY_HINTS.forEach((hint) => hintBar!.appendChild(makeHintItem(hint.keys, hint.text)))
+  buildKeyHints().forEach((hint) => hintBar!.appendChild(makeHintItem(hint.keys, hint.text)))
 }
 
 function getUI() {
@@ -119,7 +123,7 @@ function getUI() {
 function updateLabel() {
   if (!labelTag || !hoveredElement) return
   const rect = hoveredElement.getBoundingClientRect()
-  const count = isMultiPick && selectedElements.length > 0 ? ` · 已连选 ${selectedElements.length} 段` : ""
+  const count = isMultiPick && selectedElements.length > 0 ? t("pick_multi_count", { COUNT: selectedElements.length }) : ""
   labelTag.innerText = `${hoveredElement.tagName.toLowerCase()} | ${Math.round(rect.width)}x${Math.round(rect.height)}${count}`
 }
 
@@ -369,10 +373,10 @@ async function finishSelection() {
 
   exitPickMode()
 
-  showNotice(`已加入暂存（${segmentCount} 个片段）`, "success")
+  showNotice(t("pick_added_notice", { COUNT: segmentCount }), "success")
 
   chrome.runtime.sendMessage({
     type: "PICK_COMPLETE",
-    payload: { content, title: `${title} (片段)`, url }
+    payload: { content, title: `${title} ${t("pick_suffix_segment")}`, url }
   })
 }

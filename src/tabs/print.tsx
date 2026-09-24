@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { PRINT_JOB_KEY, type PrintJob } from "../lib/print-pdf"
+import { t } from "../lib/i18n"
 import "./print.css"
 
 /**
@@ -15,12 +16,12 @@ function PrintPage() {
     chrome.storage.local.get(PRINT_JOB_KEY, (result) => {
       const stored = result?.[PRINT_JOB_KEY] as PrintJob | undefined
       if (!stored?.html) {
-        setError("未找到待打印内容，请回侧边栏重新导出。")
+        setError(t("print_missing"))
         return
       }
       // 读到就删，避免内容长期留在本地存储里
       chrome.storage.local.remove(PRINT_JOB_KEY)
-      document.title = stored.title || "拾贝导出"
+      document.title = stored.title || t("default_export_title")
       setJob(stored)
     })
   }, [])
@@ -78,7 +79,7 @@ function PrintPage() {
       <div className="print-empty">
         <p>{error}</p>
         <button type="button" onClick={closeTab}>
-          关闭此页
+          {t("print_close_page")}
         </button>
       </div>
     )
@@ -88,18 +89,18 @@ function PrintPage() {
     <>
       <div className="print-bar">
         <div className="print-bar-text">
-          <strong>拾贝 · 导出 PDF</strong>
+          <strong>{t("print_title")}</strong>
           <span>
-            打印对话框里把「目标打印机」选为 <em>另存为 PDF</em>，并在「更多设置」中取消勾选「页眉和页脚」。
+            {t("print_guide")}
           </span>
         </div>
         <div className="print-bar-actions">
-          {printed && <span className="print-bar-done">已生成，可关闭此页</span>}
+          {printed && <span className="print-bar-done">{t("print_ready_close")}</span>}
           <button type="button" className="print-btn print-btn-primary" onClick={() => window.print()}>
-            {printed ? "再次打印" : "打印 / 另存为 PDF"}
+            {printed ? t("print_again") : t("print_or_save_pdf")}
           </button>
           <button type="button" className="print-btn" onClick={closeTab}>
-            关闭
+            {t("print_close")}
           </button>
         </div>
       </div>

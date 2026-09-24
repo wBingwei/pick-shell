@@ -6,6 +6,7 @@ import {
   type EditJob
 } from "../lib/basket"
 import { markdownToHtml } from "../lib/markdown-engine"
+import { t } from "../lib/i18n"
 import themeCss from "data-text:../styles/modern.css"
 import "./editor.css"
 
@@ -41,31 +42,39 @@ type ToolbarAction = {
   before?: string
   after?: string
   block?: string
+  /** block 模板需要语言包插值时，用函数生成最终内容 */
+  blockBuilder?: () => string
 }
 
 const TOOLBAR: ToolbarAction[][] = [
   [
-    { label: "H1", title: "一级标题", kind: "prefix", before: "# " },
-    { label: "H2", title: "二级标题", kind: "prefix", before: "## " },
-    { label: "H3", title: "三级标题", kind: "prefix", before: "### " }
+    { label: "H1", title: t("tool_h1"), kind: "prefix", before: "# " },
+    { label: "H2", title: t("tool_h2"), kind: "prefix", before: "## " },
+    { label: "H3", title: t("tool_h3"), kind: "prefix", before: "### " }
   ],
   [
-    { label: "粗体", title: "加粗（Ctrl/Cmd + B）", kind: "wrap", before: "**", after: "**" },
-    { label: "斜体", title: "斜体（Ctrl/Cmd + I）", kind: "wrap", before: "*", after: "*" },
-    { label: "删除线", title: "删除线", kind: "wrap", before: "~~", after: "~~" },
-    { label: "行内代码", title: "行内代码", kind: "wrap", before: "`", after: "`" }
+    { label: t("tool_bold_label"), title: t("tool_bold"), kind: "wrap", before: "**", after: "**" },
+    { label: t("tool_italic_label"), title: t("tool_italic"), kind: "wrap", before: "*", after: "*" },
+    { label: t("tool_strikethrough_label"), title: t("tool_strikethrough"), kind: "wrap", before: "~~", after: "~~" },
+    { label: t("tool_inline_code_label"), title: t("tool_inline_code"), kind: "wrap", before: "`", after: "`" }
   ],
   [
-    { label: "引用", title: "引用块", kind: "prefix", before: "> " },
-    { label: "无序列表", title: "无序列表", kind: "prefix", before: "- " },
-    { label: "有序列表", title: "有序列表", kind: "prefix", before: "1. " }
+    { label: t("tool_quote_label"), title: t("tool_quote"), kind: "prefix", before: "> " },
+    { label: t("tool_ul_label"), title: t("tool_ul"), kind: "prefix", before: "- " },
+    { label: t("tool_ol_label"), title: t("tool_ol"), kind: "prefix", before: "1. " }
   ],
   [
-    { label: "链接", title: "链接（Ctrl/Cmd + K）", kind: "wrap", before: "[", after: "](https://)" },
-    { label: "图片", title: "图片", kind: "wrap", before: "![", after: "](https://)" },
-    { label: "代码块", title: "代码块", kind: "block", block: "```\n\n```" },
-    { label: "表格", title: "表格", kind: "block", block: "| 列 1 | 列 2 |\n| --- | --- |\n|  |  |" },
-    { label: "分割线", title: "分割线", kind: "block", block: "---" }
+    { label: t("tool_link_label"), title: t("tool_link"), kind: "wrap", before: "[", after: "](https://)" },
+    { label: t("tool_image_label"), title: t("tool_image"), kind: "wrap", before: "![", after: "](https://)" },
+    { label: t("tool_codeblock_label"), title: t("tool_codeblock"), kind: "block", block: "```\n\n```" },
+    {
+      label: t("tool_table_label"),
+      title: t("tool_table"),
+      kind: "block",
+      blockBuilder: () =>
+        `| ${t("tool_table_col1")} | ${t("tool_table_col2")} |\n| --- | --- |\n|  |  |`
+    },
+    { label: t("tool_hr_label"), title: t("tool_hr"), kind: "block", block: "---" }
   ]
 ]
 
@@ -88,10 +97,10 @@ function EditorPage() {
   useEffect(() => {
     takeEditJob().then((loaded) => {
       if (!loaded) {
-        setError("未找到该片段，请回侧边栏重新打开。")
+        setError(t("editor_missing"))
         return
       }
-      document.title = loaded.title ? `编辑 · ${loaded.title}` : "拾贝 · 编辑片段"
+      document.title = loaded.title ? t("editor_title_prefix", { TITLE: loaded.title }) : t("editor_title")
       setJob(loaded)
       setMarkdown(loaded.markdown || "")
       setSavedMarkdown(loaded.markdown || "")
@@ -140,7 +149,7 @@ function EditorPage() {
       }
 
       if (action.kind === "block") {
-        const block = action.block || ""
+        const block = action.blockBuilder ? action.blockBuilder() : (action.block || "")
         const lineStart = value.lastIndexOf("\n", s - 1) + 1
         const needsBreak = lineStart > 0 && value.slice(lineStart, s).trim() !== ""
         const prefix = needsBreak ? "\n\n" : ""
@@ -192,12 +201,12 @@ function EditorPage() {
       await closeWindow()
     } catch (err: any) {
       setSaving(false)
-      setError(`保存失败：${err?.message || err}`)
+      setError(t("editor_save_failed", { MSG: err?.message || String(err) }))
     }
   }, [job, markdown, saving, closeWindow])
 
   const handleClose = useCallback(() => {
-    if (dirty && !window.confirm("有未保存的修改，确定放弃并关闭吗？")) return
+    if (dirty && !window.confirm(t("editor_discard_confirm"))) return
     closeWindow()
   }, [dirty, closeWindow])
 
@@ -246,7 +255,7 @@ function EditorPage() {
       <div className="editor-empty">
         <p>{error}</p>
         <button type="button" onClick={closeWindow}>
-          关闭
+          {t("editor_close")}
         </button>
       </div>
     )
@@ -259,7 +268,7 @@ function EditorPage() {
     <div className="editor-app">
       <header className="editor-bar">
         <div className="editor-bar-info">
-          <strong>拾贝 · 编辑片段</strong>
+          <strong>{t("editor_title")}</strong>
           {job?.title && <span className="editor-bar-title">{job.title}</span>}
           {job?.url && (
             <a className="editor-bar-url" href={job.url} target="_blank" rel="noreferrer">
@@ -269,14 +278,14 @@ function EditorPage() {
         </div>
         <div className="editor-bar-actions">
           <span className="editor-count">
-            {charCount} 字 · {lineCount} 行
+            {t("editor_char_line", { CHARS: charCount, LINES: lineCount })}
           </span>
-          {dirty && <span className="editor-dirty">未保存</span>}
+          {dirty && <span className="editor-dirty">{t("editor_unsaved")}</span>}
           <button type="button" className="editor-btn editor-btn-primary" onClick={handleSave} disabled={saving}>
-            保存并关闭
+            {t("editor_save_close")}
           </button>
           <button type="button" className="editor-btn" onClick={handleClose}>
-            取消
+            {t("editor_cancel")}
           </button>
         </div>
       </header>
@@ -312,16 +321,16 @@ function EditorPage() {
             spellCheck={false}
             onChange={(e) => setMarkdown(e.target.value)}
             onKeyDown={handleTab}
-            placeholder="编辑 Markdown，右侧实时预览"
+            placeholder={t("editor_placeholder")}
           />
         </section>
 
         <section className="editor-pane">
-          <div className="editor-pane-head">预览</div>
+          <div className="editor-pane-head">{t("editor_preview")}</div>
           <iframe
             ref={previewRef}
             className="editor-preview"
-            title="预览"
+            title={t("editor_preview")}
             srcDoc={PREVIEW_SKELETON}
             onLoad={() => setFrameReady(true)}
           />

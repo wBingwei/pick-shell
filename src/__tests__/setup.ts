@@ -1,4 +1,5 @@
 import { vi, beforeEach } from "vitest"
+import zhMessages from "../../locales/zh_CN/messages.json"
 
 // Vitest 下没有 chrome 全局，这里补齐最小可用 mock。
 // 各测试文件可以按需 vi.stubGlobal("chrome", {...}) 覆盖具体行为。
@@ -6,6 +7,11 @@ import { vi, beforeEach } from "vitest"
 const storageLocal: Record<string, unknown> = {}
 
 export const chromeMock = {
+  // 用真实 zh_CN 语言包支撑 getMessage；故意不用 vi.fn，避免被 resetAllMocks 清空
+  i18n: {
+    getMessage: (key: string) => (zhMessages as Record<string, { message: string }>)[key]?.message ?? "",
+    getUILanguage: () => "zh-CN"
+  },
   runtime: {
     getManifest: vi.fn(() => ({ content_scripts: [] })),
     sendMessage: vi.fn(),
