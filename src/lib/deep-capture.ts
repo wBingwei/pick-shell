@@ -1,7 +1,7 @@
 import { isScrollable, simpleHash, sleep } from "./utils"
 import { hydrateLazyImages } from "./image-processor"
 
-export function getScrollableContainers(root: HTMLElement) {
+function getScrollableContainers(root: HTMLElement) {
   const result: HTMLElement[] = []
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
   let node = walker.currentNode as HTMLElement
@@ -29,12 +29,12 @@ export function getBestScrollableContainer(root: HTMLElement) {
   return best
 }
 
-export function isSkeletonElement(el: HTMLElement) {
+function isSkeletonElement(el: HTMLElement) {
   const className = el.className || ""
   return typeof className === "string" && /skeleton|placeholder|shimmer|loading/i.test(className)
 }
 
-export function getCandidateItems(container: HTMLElement) {
+function getCandidateItems(container: HTMLElement) {
   let items = Array.from(
     container.querySelectorAll(
       "[data-id],[data-index],[data-rowid],[role='listitem'],[role='row']"
@@ -52,7 +52,7 @@ export function getCandidateItems(container: HTMLElement) {
   })
 }
 
-export function isVirtualListContainer(container: HTMLElement) {
+function isVirtualListContainer(container: HTMLElement) {
   if (!isScrollable(container)) return false
   const ratio = container.scrollHeight / Math.max(1, container.clientHeight)
   if (ratio < 2) return false

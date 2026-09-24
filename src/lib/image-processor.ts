@@ -1,7 +1,5 @@
-import { simpleHash, sleep } from "./utils"
-
 // 图片转 Base64 并在 Canvas 中压缩
-export async function imageToBase64(img: HTMLImageElement, maxWidth = 1200): Promise<string> {
+async function imageToBase64(img: HTMLImageElement, maxWidth = 1200): Promise<string> {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")

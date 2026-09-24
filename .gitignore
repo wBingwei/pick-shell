@@ -1,7 +1,5 @@
 # Dependencies
 node_modules/
-/server/node_modules/
-/server/temp/
 
 # Plasmo & Build Outputs
 .plasmo/

@@ -11,7 +11,7 @@
 export const PRINT_JOB_KEY = "printJob"
 
 /** 打印页在构建产物里的路径（对应源码 tabs/print.tsx） */
-export const PRINT_PAGE_PATH = "tabs/print.html"
+const PRINT_PAGE_PATH = "tabs/print.html"
 
 export interface PrintJob {
   title: string
