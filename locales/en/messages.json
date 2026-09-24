@@ -31,8 +31,14 @@
   "pick_key_join_clip": { "message": "Add to selection" },
   "pick_key_capture_selected": { "message": "Capture selection" },
   "pick_key_exit_mode": { "message": "Exit picking" },
-  "pick_multi_count": { "message": " · $COUNT$ selected" },
-  "pick_added_notice": { "message": "Added to basket ($COUNT$ clips)" },
+  "pick_multi_count": {
+    "message": " · $count$ selected",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "pick_added_notice": {
+    "message": "Added to basket ($count$ clips)",
+    "placeholders": { "count": { "content": "$1" } }
+  },
   "pick_suffix_segment": { "message": "(clips)" },
   "menu_extract_selection": { "message": "PickShell: Export selected text" },
   "menu_suffix_selection": { "message": "(selection)" },
@@ -58,7 +64,10 @@
 
   "doc_title_label": { "message": "Title" },
   "doc_title_restore": { "message": "Restore automatic title" },
-  "composed_title": { "message": "PickShell merged doc - $DATE$" },
+  "composed_title": {
+    "message": "PickShell merged doc - $date$",
+    "placeholders": { "date": { "content": "$1" } }
+  },
   "default_export_title": { "message": "PickShell export" },
 
   "status_extracting": { "message": "Extracting..." },
@@ -66,10 +75,16 @@
   "status_add_failed": { "message": "Failed to add to basket" },
   "status_merging": { "message": "Merging..." },
   "status_copied": { "message": "Copied to clipboard" },
-  "status_merge_copy_failed": { "message": "Merge & copy failed: $MSG$" },
+  "status_merge_copy_failed": {
+    "message": "Merge & copy failed: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "status_merging_short": { "message": "Merging..." },
   "status_export_done": { "message": "Export complete" },
-  "status_merge_failed": { "message": "Merge failed: $MSG$" },
+  "status_merge_failed": {
+    "message": "Merge failed: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
 
   "action_processing": { "message": "Processing..." },
   "action_inlining_images": { "message": "Inlining images..." },
@@ -78,7 +93,10 @@
   "action_export_success": { "message": "Exported successfully!" },
   "action_preparing_print": { "message": "Preparing print page..." },
   "action_print_opened": { "message": "Print page opened; choose \"Save as PDF\"" },
-  "action_error_prefix": { "message": "Error: $MSG$" },
+  "action_error_prefix": {
+    "message": "Error: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "err_no_active_tab": { "message": "Cannot get the current page" },
   "err_no_response": { "message": "The page script did not respond (it may have errored internally). Please refresh the page and try again." },
   "err_restricted_page": { "message": "Reading content is not supported on this page (browser-internal pages / extension stores). Please switch to a regular web page." },
@@ -102,15 +120,27 @@
   "print_missing": { "message": "Nothing to print found. Please go back to the side panel and export again." },
 
   "editor_title": { "message": "PickShell · Edit clip" },
-  "editor_title_prefix": { "message": "Edit · $TITLE$" },
+  "editor_title_prefix": {
+    "message": "Edit · $title$",
+    "placeholders": { "title": { "content": "$1" } }
+  },
   "editor_save_close": { "message": "Save & close" },
   "editor_cancel": { "message": "Cancel" },
   "editor_unsaved": { "message": "Unsaved" },
-  "editor_char_line": { "message": "$CHARS$ chars · $LINES$ lines" },
+  "editor_char_line": {
+    "message": "$chars$ chars · $lines$ lines",
+    "placeholders": {
+      "chars": { "content": "$1" },
+      "lines": { "content": "$2" }
+    }
+  },
   "editor_placeholder": { "message": "Edit Markdown with live preview on the right" },
   "editor_preview": { "message": "Preview" },
   "editor_missing": { "message": "Clip not found. Please reopen it from the side panel." },
-  "editor_save_failed": { "message": "Save failed: $MSG$" },
+  "editor_save_failed": {
+    "message": "Save failed: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "editor_discard_confirm": { "message": "You have unsaved changes. Discard them and close?" },
   "editor_close": { "message": "Close" },
 

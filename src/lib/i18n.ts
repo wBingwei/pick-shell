@@ -5,22 +5,17 @@
  * Chrome 会按 当前语言 → 语言主码 → default_locale 的顺序在 _locales 中查找，
  * 业务代码不需要自己判断语言。
  *
- * 语言包里的变量占位符统一写成 $NAME$（messages.json 无需再声明 placeholders），
- * 调用方式：t("pick_multi_count", { COUNT: 3 })
+ * 带变量的消息必须在 messages.json 的 placeholders 中声明（$1/$2...），
+ * 本函数把命名参数对象按传入顺序转成 getMessage 需要的位置参数数组。
+ * 例如消息 "错误: $msg$" + t("action_error_prefix", { MSG: "x" })。
+ * 注意：多参数时，对象键的传入顺序要与 placeholders 中 $1、$2 的声明顺序一致。
  */
 
 export function t(key: string, params?: Record<string, string | number>): string {
-  let message = chrome.i18n.getMessage(key)
-  if (!message) {
-    // 语言包缺 key 时回退为 key 本身，而不是展示空串
-    return key
-  }
-  if (params) {
-    for (const [name, value] of Object.entries(params)) {
-      message = message.split(`$${name}$`).join(String(value))
-    }
-  }
-  return message
+  const substitutions = params ? Object.values(params).map((v) => String(v)) : undefined
+  const message = chrome.i18n.getMessage(key, substitutions)
+  // 语言包缺 key 时回退为 key 本身，而不是展示空串
+  return message || key
 }
 
 /** 当前浏览器界面语言，如 "zh-CN"、"en-US" */

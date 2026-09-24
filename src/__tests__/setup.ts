@@ -7,9 +7,33 @@ import zhMessages from "../../locales/zh_CN/messages.json"
 const storageLocal: Record<string, unknown> = {}
 
 export const chromeMock = {
-  // 用真实 zh_CN 语言包支撑 getMessage；故意不用 vi.fn，避免被 resetAllMocks 清空
+  // 用真实 zh_CN 语言包支撑 getMessage；故意不用 vi.fn，避免被 resetAllMocks 清空。
+  // 模拟 Chrome 的两层替换：消息中的 $name$ → placeholders 声明的 $1/$2 → 位置实参。
   i18n: {
-    getMessage: (key: string) => (zhMessages as Record<string, { message: string }>)[key]?.message ?? "",
+    getMessage: (key: string, substitutions?: string | string[]) => {
+      const catalog = zhMessages as Record<
+        string,
+        { message: string; placeholders?: Record<string, { content: string }> }
+      >
+      const entry = catalog[key]
+      if (!entry) return ""
+      const subs =
+        substitutions === undefined
+          ? []
+          : Array.isArray(substitutions)
+            ? substitutions
+            : [substitutions]
+      // Chrome 机制：$name$ 经 placeholders.content（如 "$1"）直接映射到第 N 个实参
+      const indexByName: Record<string, number> = {}
+      for (const [name, ph] of Object.entries(entry.placeholders ?? {})) {
+        const m = /\$(\d+)/.exec(ph.content)
+        if (m) indexByName[name.toLowerCase()] = Number(m[1]) - 1
+      }
+      return entry.message.replace(/\$([a-z0-9]+)\$/gi, (_m, name: string) => {
+        const idx = indexByName[name.toLowerCase()]
+        return idx === undefined ? `$${name}$` : (subs[idx] ?? "")
+      })
+    },
     getUILanguage: () => "zh-CN"
   },
   runtime: {

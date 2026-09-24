@@ -31,8 +31,14 @@
   "pick_key_join_clip": { "message": "连选片段" },
   "pick_key_capture_selected": { "message": "采集所选" },
   "pick_key_exit_mode": { "message": "退出选区" },
-  "pick_multi_count": { "message": " · 已连选 $COUNT$ 段" },
-  "pick_added_notice": { "message": "已加入暂存（$COUNT$ 个片段）" },
+  "pick_multi_count": {
+    "message": " · 已连选 $count$ 段",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "pick_added_notice": {
+    "message": "已加入暂存（$count$ 个片段）",
+    "placeholders": { "count": { "content": "$1" } }
+  },
   "pick_suffix_segment": { "message": "(片段)" },
   "menu_extract_selection": { "message": "拾贝：导出当前选中区域" },
   "menu_suffix_selection": { "message": "(右键片段)" },
@@ -58,7 +64,10 @@
 
   "doc_title_label": { "message": "标题" },
   "doc_title_restore": { "message": "恢复自动标题" },
-  "composed_title": { "message": "拾贝 合成文档 - $DATE$" },
+  "composed_title": {
+    "message": "拾贝 合成文档 - $date$",
+    "placeholders": { "date": { "content": "$1" } }
+  },
   "default_export_title": { "message": "拾贝导出" },
 
   "status_extracting": { "message": "正在提取..." },
@@ -66,10 +75,16 @@
   "status_add_failed": { "message": "加入暂存失败" },
   "status_merging": { "message": "正在智能合成..." },
   "status_copied": { "message": "已拷贝到剪贴板" },
-  "status_merge_copy_failed": { "message": "合成拷贝失败: $MSG$" },
+  "status_merge_copy_failed": {
+    "message": "合成拷贝失败: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "status_merging_short": { "message": "正在合成..." },
   "status_export_done": { "message": "导出完成" },
-  "status_merge_failed": { "message": "合成失败: $MSG$" },
+  "status_merge_failed": {
+    "message": "合成失败: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
 
   "action_processing": { "message": "处理中..." },
   "action_inlining_images": { "message": "正在内联图片..." },
@@ -78,7 +93,10 @@
   "action_export_success": { "message": "导出成功！" },
   "action_preparing_print": { "message": "正在准备打印页..." },
   "action_print_opened": { "message": "已打开打印页，选择「另存为 PDF」" },
-  "action_error_prefix": { "message": "错误: $MSG$" },
+  "action_error_prefix": {
+    "message": "错误: $msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "err_no_active_tab": { "message": "无法获取当前页面" },
   "err_no_response": { "message": "页面脚本没有响应（内部可能出错了），请刷新页面后重试" },
   "err_restricted_page": { "message": "当前页面不支持读取内容（Chrome 内部页面 / 扩展商店等），请切换到普通网页再试" },
@@ -102,15 +120,27 @@
   "print_missing": { "message": "未找到待打印内容，请回侧边栏重新导出。" },
 
   "editor_title": { "message": "拾贝 · 编辑片段" },
-  "editor_title_prefix": { "message": "编辑 · $TITLE$" },
+  "editor_title_prefix": {
+    "message": "编辑 · $title$",
+    "placeholders": { "title": { "content": "$1" } }
+  },
   "editor_save_close": { "message": "保存并关闭" },
   "editor_cancel": { "message": "取消" },
   "editor_unsaved": { "message": "未保存" },
-  "editor_char_line": { "message": "$CHARS$ 字 · $LINES$ 行" },
+  "editor_char_line": {
+    "message": "$chars$ 字 · $lines$ 行",
+    "placeholders": {
+      "chars": { "content": "$1" },
+      "lines": { "content": "$2" }
+    }
+  },
   "editor_placeholder": { "message": "编辑 Markdown，右侧实时预览" },
   "editor_preview": { "message": "预览" },
   "editor_missing": { "message": "未找到该片段，请回侧边栏重新打开。" },
-  "editor_save_failed": { "message": "保存失败：$MSG$" },
+  "editor_save_failed": {
+    "message": "保存失败：$msg$",
+    "placeholders": { "msg": { "content": "$1" } }
+  },
   "editor_discard_confirm": { "message": "有未保存的修改，确定放弃并关闭吗？" },
   "editor_close": { "message": "关闭" },
 
