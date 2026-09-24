@@ -20,6 +20,17 @@ describe("markdownToHtml", () => {
     expect(html).toContain("<th>")
     expect(html).toContain("<td>")
   })
+
+  it("GFM 任务列表", () => {
+    const html = markdownToHtml("- [x] done\n- [ ] todo")
+    expect(html).toContain('type="checkbox"')
+    expect(html).toContain("checked")
+  })
+
+  it("GFM 删除线", () => {
+    const html = markdownToHtml("~~removed~~")
+    expect(html).toContain("<del>removed</del>")
+  })
 })
 
 describe("htmlToMarkdown", () => {
@@ -59,6 +70,51 @@ describe("htmlToMarkdown", () => {
     const occurrences = md.match(/```/g)?.length ?? 0
     // 两对 ``` = 一个代码块
     expect(occurrences).toBe(2)
+  })
+
+  it("识别 language-xxx 代码语言", () => {
+    const md = htmlToMarkdown('<pre><code class="language-python">print(1)</code></pre>')
+    expect(md).toContain("```python")
+  })
+
+  it("裸 pre（高亮库不套 code）也输出围栏代码块，不被压成一行", () => {
+    const html = "<pre>line one\nline two\nline three</pre>"
+    const md = htmlToMarkdown(html)
+    expect(md).toContain("```")
+    expect(md).toContain("line one")
+    expect(md).toContain("line two")
+    expect(md).toContain("line three")
+  })
+
+  it("剔除 pre 内的语言标签装饰节点", () => {
+    const html =
+      '<pre><span class="language-label">js</span><code class="language-js">const a = 1</code></pre>'
+    const md = htmlToMarkdown(html)
+    expect(md).not.toContain("language-label")
+    expect(md).toContain("const a = 1")
+  })
+
+  it("button 等交互控件文字被丢弃", () => {
+    const md = htmlToMarkdown("<div><p>正文内容</p><button>复制代码</button></div>")
+    expect(md).toContain("正文内容")
+    expect(md).not.toContain("复制代码")
+  })
+
+  it("保留 u/ins/mark 标签", () => {
+    const md = htmlToMarkdown("<p><u>下划线</u><ins>插入</ins><mark>标记</mark></p>")
+    expect(md).toContain("<u>")
+    expect(md).toContain("<ins>")
+    expect(md).toContain("<mark>")
+  })
+
+  it("无 src 的图片输出空字符串", () => {
+    const md = htmlToMarkdown("<img alt='broken'>")
+    expect(md.trim()).toBe("")
+  })
+
+  it("图片 title 写入引号标题", () => {
+    const md = htmlToMarkdown('<img src="https://x.test/a.png" title="cap">')
+    expect(md).toContain('(https://x.test/a.png "cap")')
   })
 })
 
@@ -103,5 +159,25 @@ describe("convertToMarkdown", () => {
     const md = await convertToMarkdown("<p>x</p>", "T", ["", "https://a.com", null as any, ""])
     expect(md).toContain("source:")
     expect(md).not.toContain('source: ""')
+  })
+
+  it("重复来源去重后只剩一条，用单数 source", async () => {
+    const md = await convertToMarkdown("<p>x</p>", "T", [
+      "https://a.com",
+      "https://a.com"
+    ])
+    expect(md).toContain('source: "https://a.com"')
+    expect(md).not.toContain("sources:")
+  })
+
+  it("多来源中重复项去重后仍为 sources 列表", async () => {
+    const md = await convertToMarkdown("<p>x</p>", "T", [
+      "https://a.com",
+      "https://a.com",
+      "https://b.com"
+    ])
+    expect(md).toContain("sources:")
+    const aCount = md.match(/https:\/\/a\.com/g)?.length ?? 0
+    expect(aCount).toBe(1)
   })
 })

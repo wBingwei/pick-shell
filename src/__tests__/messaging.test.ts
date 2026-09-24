@@ -71,4 +71,32 @@ describe("sendTabMessage", () => {
     ;(chrome.tabs.sendMessage as any).mockRejectedValueOnce(new Error("网络断开"))
     await expect(sendTabMessage(1, "https://example.com", {})).rejects.toThrow("网络断开")
   })
+
+  it("'before a response was received' 单独出现也判定为无响应，不尝试注入", async () => {
+    ;(chrome.tabs.sendMessage as any).mockRejectedValueOnce(
+      new Error("The message port closed before a response was received.")
+    )
+    await expect(sendTabMessage(1, "https://example.com", {})).rejects.toThrow(/没有响应/)
+    expect(chrome.scripting.executeScript).not.toHaveBeenCalled()
+  })
+
+  it("拿不到 tabUrl 时不预判受限，直接尝试注入", async () => {
+    ;(chrome.tabs.sendMessage as any)
+      .mockRejectedValueOnce(new Error("Receiving end does not exist."))
+      .mockResolvedValueOnce({ ok: 1 })
+    ;(chrome.scripting.executeScript as any).mockResolvedValueOnce([{}])
+
+    const result = await sendTabMessage(1, undefined, { type: "X" })
+    expect(result).toEqual({ ok: 1 })
+    expect(chrome.scripting.executeScript).toHaveBeenCalledTimes(1)
+  })
+
+  it("注入后重试仍抛非 receiver 错误 → 报「没有响应」", async () => {
+    ;(chrome.tabs.sendMessage as any)
+      .mockRejectedValueOnce(new Error("Receiving end does not exist."))
+      .mockRejectedValueOnce(new Error("页面内部炸了"))
+    ;(chrome.scripting.executeScript as any).mockResolvedValueOnce([{}])
+
+    await expect(sendTabMessage(1, "https://example.com", {})).rejects.toThrow(/没有响应/)
+  })
 })

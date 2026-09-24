@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { sleep, isRestrictedUrl, simpleHash } from "../lib/utils"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { sleep, isRestrictedUrl, isScrollable, simpleHash } from "../lib/utils"
 
 describe("sleep", () => {
   beforeEach(() => {
@@ -41,6 +41,15 @@ describe("isRestrictedUrl", () => {
     expect(isRestrictedUrl("https://chromewebstore.google.com/detail/yyy")).toBe(true)
   })
 
+  it("对其余受限协议也返回 true", () => {
+    expect(isRestrictedUrl("chrome-untrusted://something")).toBe(true)
+    expect(isRestrictedUrl("chrome-search://local-ntp/local-ntp.html")).toBe(true)
+  })
+
+  it("file:// 不视为受限（取决于用户是否开启文件网址权限）", () => {
+    expect(isRestrictedUrl("file:///C:/Users/test/note.html")).toBe(false)
+  })
+
   it("对普通 https/http 页面返回 false", () => {
     expect(isRestrictedUrl("https://example.com/article")).toBe(false)
     expect(isRestrictedUrl("http://blog.test.org/post")).toBe(false)
@@ -65,5 +74,49 @@ describe("simpleHash", () => {
 
   it("空字符串也能产生输出", () => {
     expect(typeof simpleHash("")).toBe("string")
+  })
+})
+
+describe("isScrollable", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function mockStyle(overflowY: string) {
+    vi.spyOn(window, "getComputedStyle").mockReturnValue({
+      overflowY
+    } as CSSStyleDeclaration)
+  }
+
+  it("overflow:auto 且内容超出时可滚动", () => {
+    mockStyle("auto")
+    const el = document.createElement("div")
+    Object.defineProperty(el, "scrollHeight", { value: 500, configurable: true })
+    Object.defineProperty(el, "clientHeight", { value: 200, configurable: true })
+    expect(isScrollable(el)).toBe(true)
+  })
+
+  it("overflow:scroll 且内容超出时可滚动", () => {
+    mockStyle("scroll")
+    const el = document.createElement("div")
+    Object.defineProperty(el, "scrollHeight", { value: 300, configurable: true })
+    Object.defineProperty(el, "clientHeight", { value: 100, configurable: true })
+    expect(isScrollable(el)).toBe(true)
+  })
+
+  it("overflow:hidden 即使内容超出也不可滚动", () => {
+    mockStyle("hidden")
+    const el = document.createElement("div")
+    Object.defineProperty(el, "scrollHeight", { value: 999, configurable: true })
+    Object.defineProperty(el, "clientHeight", { value: 100, configurable: true })
+    expect(isScrollable(el)).toBe(false)
+  })
+
+  it("内容未超出（差值 ≤ 20px）时不可滚动", () => {
+    mockStyle("auto")
+    const el = document.createElement("div")
+    Object.defineProperty(el, "scrollHeight", { value: 210, configurable: true })
+    Object.defineProperty(el, "clientHeight", { value: 200, configurable: true })
+    expect(isScrollable(el)).toBe(false)
   })
 })

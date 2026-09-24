@@ -3,6 +3,7 @@ import {
   BASKET_KEY,
   getBasket,
   setBasket,
+  openEditor,
   takeEditJob,
   saveClipMarkdown,
   notifyBasketUpdated,
@@ -84,6 +85,40 @@ describe("saveClipMarkdown", () => {
     )
     const result = await saveClipMarkdown("not-exist", "# New")
     expect(result).toEqual(initial)
+  })
+})
+
+describe("openEditor", () => {
+  const clip: Clip = {
+    id: "c1",
+    content: "<p>html</p>",
+    markdown: "# Hi",
+    title: "标题",
+    url: "https://example.com/post"
+  }
+
+  it("写入 editJob、打开 popup 窗口并最大化", async () => {
+    await openEditor(clip)
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      editJob: { id: "c1", title: "标题", url: "https://example.com/post", markdown: "# Hi" }
+    })
+    expect(chrome.windows.create).toHaveBeenCalledTimes(1)
+    const args = (chrome.windows.create as any).mock.calls[0][0]
+    expect(args.type).toBe("popup")
+    expect(args.url).toContain("tabs/editor.html")
+    expect(chrome.windows.update).toHaveBeenCalledWith(1, { state: "maximized" })
+  })
+
+  it("窗口没有 id 时跳过最大化，不抛错", async () => {
+    ;(chrome.windows.create as any).mockResolvedValueOnce({})
+    await expect(openEditor(clip)).resolves.toEqual({})
+    expect(chrome.windows.update).not.toHaveBeenCalled()
+  })
+
+  it("最大化失败被静默吞掉（窗口仍可用于编辑）", async () => {
+    ;(chrome.windows.update as any).mockRejectedValueOnce(new Error("boom"))
+    await expect(openEditor(clip)).resolves.toBeDefined()
   })
 })
 

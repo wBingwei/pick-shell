@@ -1,3 +1,5 @@
+import { vi, beforeEach } from "vitest"
+
 // Vitest 下没有 chrome 全局，这里补齐最小可用 mock。
 // 各测试文件可以按需 vi.stubGlobal("chrome", {...}) 覆盖具体行为。
 
@@ -11,6 +13,9 @@ export const chromeMock = {
     onMessage: {
       addListener: vi.fn(),
       removeListener: vi.fn()
+    },
+    onInstalled: {
+      addListener: vi.fn()
     }
   },
   tabs: {
