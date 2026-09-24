@@ -37,7 +37,7 @@ async function injectContentScript(tabId: number) {
     await chrome.scripting.executeScript({ target: { tabId }, files })
     return true
   } catch (e) {
-    console.warn("[shell-picker] 动态注入内容脚本失败:", e)
+    console.warn("[pick-shell] 动态注入内容脚本失败:", e)
     return false
   }
 }

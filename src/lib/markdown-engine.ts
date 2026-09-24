@@ -112,7 +112,7 @@ export function markdownToHtml(markdown: string) {
   try {
     return marked.parse(markdown, { async: false }) as string
   } catch (e) {
-    console.warn("[shell-picker] Markdown 渲染失败:", e)
+    console.warn("[pick-shell] Markdown 渲染失败:", e)
     return ""
   }
 }
@@ -126,7 +126,7 @@ export function htmlToMarkdown(html: string) {
   try {
     return collapseDuplicateCodeBlocks(turndownService.turndown(html)).trim()
   } catch (e) {
-    console.warn("[shell-picker] HTML 转 Markdown 失败:", e)
+    console.warn("[pick-shell] HTML 转 Markdown 失败:", e)
     return ""
   }
 }

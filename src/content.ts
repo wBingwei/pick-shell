@@ -74,7 +74,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false
   } catch (err) {
     // 同步异常如果直接抛出，消息端口会被关闭，调用方只能看到 "message port closed"
-    console.error("[shell-picker] 内容脚本处理消息失败:", err)
+    console.error("[pick-shell] 内容脚本处理消息失败:", err)
     sendResponse({ error: err instanceof Error ? err.message : String(err) })
     return false
   }

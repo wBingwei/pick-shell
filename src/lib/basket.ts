@@ -57,7 +57,7 @@ export async function openEditor(clip: Clip) {
     try {
       await chrome.windows.update(win.id, { state: "maximized" })
     } catch (e) {
-      console.warn("[shell-picker] 最大化编辑窗口失败:", e)
+      console.warn("[pick-shell] 最大化编辑窗口失败:", e)
     }
   }
 
